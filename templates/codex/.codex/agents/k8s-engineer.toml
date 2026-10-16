@@ -1,0 +1,7 @@
+name = "k8s-engineer"
+description = "{{description shared/agents/k8s-engineer.md}}"
+model_reasoning_effort = "medium"
+# model = "<model id>"  # optional: pin a model; otherwise inherits the parent session's model
+developer_instructions = """
+{{body shared/agents/k8s-engineer.md}}
+"""

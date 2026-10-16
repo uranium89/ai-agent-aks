@@ -1,0 +1,10 @@
+---
+description: AI AKS team rules (ops-lead, aks-architect, sre, iac-engineer, k8s-engineer, validator, secops, reviewer)
+alwaysApply: true
+---
+
+{{include shared/RULES.md}}
+
+## Orchestration (Cursor)
+- The roles are subagents in `.cursor/agents/*.md`. Invoke them explicitly with `/ops-lead`, `/aks-architect`, `/sre`, `/iac-engineer`, `/k8s-engineer`, `/validator`, `/secops`, `/reviewer`, following the Orchestrator rules above.
+- `.cursor/hooks.json` runs `.cursor/hooks/aks_guard.py` before every shell command: blocked commands are denied, read-only cluster commands are allowed, everything else asks the operator.

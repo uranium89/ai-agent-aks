@@ -1,0 +1,7 @@
+name = "reviewer"
+description = "{{description shared/agents/reviewer.md}}"
+model_reasoning_effort = "high"
+# model = "<model id>"  # optional: pin a model; otherwise inherits the parent session's model
+developer_instructions = """
+{{body shared/agents/reviewer.md}}
+"""

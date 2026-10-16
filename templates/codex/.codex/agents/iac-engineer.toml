@@ -1,0 +1,7 @@
+name = "iac-engineer"
+description = "{{description shared/agents/iac-engineer.md}}"
+model_reasoning_effort = "medium"
+# model = "<model id>"  # optional: pin a model; otherwise inherits the parent session's model
+developer_instructions = """
+{{body shared/agents/iac-engineer.md}}
+"""

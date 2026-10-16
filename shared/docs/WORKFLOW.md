@@ -1,0 +1,65 @@
+## Prompts for daily work
+
+| You say | What happens |
+|---|---|
+| `incident: <symptom> on <environment>` | ops-lead triages, sre diagnoses read-only, reviewer checks any production remediation, you get `summary.md` + `runbook.md` |
+| `change: <what> on <environments>` | plan -> (threat model) -> IaC / manifests -> validation with previews -> security gate -> review -> you get a reviewed PR-ready change and a runbook |
+| `audit: <security / upgrade / cost / reliability / networking / observability / full> on <environments>` | read-only evidence -> prioritized recommendations -> challenge -> report and new backlog items |
+| `ask: <question>` | a quick read-only answer with evidence, no paperwork |
+| `quick: <small change>` | a short change flow for low-risk, non-production edits; the gates still run |
+| `verify W-NNN` | after you applied a runbook: sre checks the result read-only |
+
+## The team
+
+| Agent | Model | Job |
+|---|---|---|
+| ops-lead | strong | Interviews you at kickoff, turns requests into work items, accepts work against evidence, writes short summaries |
+| aks-architect | strong | Owns `aks-team/ARCHITECTURE.md` and ADRs, writes change plans with blast radius and rollback, turns audit findings into recommendations |
+| sre | strong | Investigates clusters and Azure read-only: incident diagnosis, discovery, upgrade/capacity/cost evidence, post-change verification |
+| iac-engineer | fast | Implements Terraform / Bicep steps, validates offline, writes the runbook |
+| k8s-engineer | fast | Implements manifest / Helm / Kustomize / GitOps steps, validates offline, writes the runbook |
+| validator | fast | Proves every acceptance criterion with offline checks and read-only previews; hunts unexpected destroys and restarts |
+| secops | strong | Security gate on IaC and manifests, threat models, live posture audits, CI and scanner config |
+| reviewer | strong | Reviews changes, runbooks and audit reports for correctness, blast radius and rollback |
+
+## What you do as the operator
+
+1. **Set up read-only access once** (`aks-team/ACCESS.md`) and start your AI tool from that shell.
+2. **Answer the kickoff interview**: clusters and contexts, which are production, how changes are delivered, constraints.
+3. **Choose options in decision briefs** (`aks-team/decisions/DEC-*.md`) for 🔴 decisions.
+4. **Run the runbooks** (`aks-team/work/W-*/runbook.md`) — usually by merging the PR and letting your pipeline or GitOps apply it — then say `verify W-NNN`.
+
+The agents never change a cluster or an Azure resource. You stay the only one who does.
+
+## How work flows
+
+```
+Kickoff (once): tooling -> interview -> read-only discovery -> architecture baseline -> security gates -> backlog
+Incident: triage -> sre diagnosis -> (reviewer remediation check) -> summary + runbook -> you apply -> verify
+Change:   request -> plan -> (threat model) -> IaC / K8s -> validation -> security gate -> review -> acceptance -> you apply -> verify
+          NEEDS_FIX: Route ENGINEER (small fix) or Route ARCHITECT (plan wrong), max 3 loops, then Blocked
+Audit:    scope -> sre / secops evidence -> architect recommendations -> reviewer challenge -> report + backlog
+```
+
+## Risk levels
+
+| Level | Example | Who decides |
+|---|---|---|
+| 🟢 | A label, a resource request in dev, a dashboard | The agent, recorded in the plan |
+| 🟡 | Pod restarts, a new add-on, node pool change outside prod, PDB/HPA in prod | Architect proposes, reviewer challenges; escalated to you if they disagree |
+| 🔴 | Prod disruption, version upgrades in prod, networking, identity/RBAC, data/PV deletion, recreation, recurring cost | You, through a decision brief; the item waits |
+
+## Safety layers
+
+1. **Read-only identity** (`aks-team/ACCESS.md`): the real boundary. Without it, the agents run with your own permissions.
+2. **Command guard** (`aks_guard.py`, wired as a hook where the tool supports it): blocks cluster/Azure write commands, Secret reads, credential files, context switches, and commands without an explicit `--context`.
+3. **Rules and prompts**: every agent is told it is read-only and must write runbooks instead.
+4. **Review gates**: validator previews, secops scanners and the reviewer's blast-radius and rollback check before anything reaches you.
+
+## Caveats
+
+- Role write zones are instructions to the model; the tools don't enforce them.
+- The command guard parses shell commands; a determined bypass (an unlisted tool, a script file the agent wrote) can get past it. That's why the read-only identity matters.
+- Scanners and previews catch known misconfigurations and diffs, not every outage. Rollback plans are reviewed, not rehearsed.
+- AKS changes fast (versions, retirements, preview features). Agents are told to check Microsoft Learn and cite it; treat uncited claims as unverified.
+- Cost: five agents use a strong model. Use `ask:` and `quick:` for small things.
